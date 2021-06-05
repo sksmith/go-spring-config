@@ -42,16 +42,31 @@ type Source struct {
 
 // Load requests the details from the configuration server and places them in a Config object
 func Load(url, application, branch string, profiles ...string) (*Config, error) {
-	return loadFromConfigServer(url, application, branch, profiles...)
+	return loadFromConfigServer(url, application, branch, "", "", profiles...)
+}
+
+func LoadWithCreds(url, application, branch, user, pass string, profiles ...string) (*Config, error) {
+	return loadFromConfigServer(url, application, branch, user, pass, profiles...)
 }
 
 // Load requests the details from the configuration server and places them in a Config object
-func loadFromConfigServer(url, application, branch string, profiles ...string) (*Config, error) {
+func loadFromConfigServer(url, application, branch, user, pass string, profiles ...string) (*Config, error) {
 	profList := getProfileList(profiles)
-	resp, err := http.Get(fmt.Sprintf("%s/%s/%s/%s", url, application, profList, branch))
+
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s/%s/%s", url, application, profList, branch), nil)
 	if err != nil {
 		return nil, err
 	}
+	if user != "" && pass != "" {
+		req.SetBasicAuth(user, pass)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	return parseResponse(resp)
 }
 
