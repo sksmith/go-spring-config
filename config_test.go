@@ -5,13 +5,13 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	configs, err := Load("http://localhost:8888", "smfg-inventory", "master", "dev")
+	configs, err := LoadWithCreds("", "go-micro-template", "master", "", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	val := configs.Get("test.property")
-	if val != "dev" {
-		t.Fatalf("got=%s want=%s", val, "dev")
+	val := configs.Get("app.log.level")
+	if val != "debug" {
+		t.Fatalf("got=%v want=%v", val, "debug")
 	}
 }
 
@@ -29,7 +29,7 @@ fifth: 8
 `
 
 func TestFlatten(t *testing.T) {
-	want := map[string]string{
+	want := map[string]interface{}{
 		"top":                                 "topvalue",
 		"second.secondfirstchild":             "firstval",
 		"second.secondsecondchild.grandchild": "a,b",

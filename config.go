@@ -14,13 +14,13 @@ import (
 
 // Config contains the full details returned from the configuration server.
 type Config struct {
-	Values  map[string]string
+	Values  map[string]interface{}
 	Details *ConfigDetails
 }
 
 // Get is a convenience function returning the highest priority property
 // returned from the configuration server.
-func (c *Config) Get(property string) string {
+func (c *Config) Get(property string) interface{} {
 	return c.Values[property]
 }
 
@@ -36,8 +36,8 @@ type ConfigDetails struct {
 
 // PropertySource represents the details contained in a single file from the config server
 type Source struct {
-	Name    string            `json:"name"`
-	Configs map[string]string `json:"source"`
+	Name    string                 `json:"name"`
+	Configs map[string]interface{} `json:"source"`
 }
 
 // Load requests the details from the configuration server and places them in a Config object
@@ -86,12 +86,13 @@ func parseResponse(resp *http.Response) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	configResp := &ConfigDetails{}
 	if err := json.Unmarshal(bytes, configResp); err != nil {
 		return nil, err
 	}
 
-	configs := make(map[string]string)
+	configs := make(map[string]interface{})
 	cnt := len(configResp.Sources)
 	for i := cnt - 1; i >= 0; i-- {
 		ps := configResp.Sources[i]
@@ -103,7 +104,7 @@ func parseResponse(resp *http.Response) (*Config, error) {
 	return &Config{Values: configs, Details: configResp}, nil
 }
 
-func flatten(data []byte) (map[string]string, error) {
+func flatten(data []byte) (map[string]interface{}, error) {
 	yml := make(map[interface{}]interface{})
 
 	err := yaml.Unmarshal([]byte(data), &yml)
@@ -111,13 +112,13 @@ func flatten(data []byte) (map[string]string, error) {
 		return nil, err
 	}
 
-	flatmap := make(map[string]string)
+	flatmap := make(map[string]interface{})
 	fillflatmap("", yml, flatmap)
 
 	return flatmap, nil
 }
 
-func fillflatmap(prefix string, yaml map[interface{}]interface{}, flatmap map[string]string) {
+func fillflatmap(prefix string, yaml map[interface{}]interface{}, flatmap map[string]interface{}) {
 	for k, v := range yaml {
 		if key, ok := k.(string); ok {
 			if prefix != "" {
